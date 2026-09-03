@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(rtk ls *)"
+      "Bash(rtk ls *)",
+      "Bash(rtk npm *)",
+      "Bash(rtk npx *)",
+      "Bash(rtk proxy *)",
+      "Bash(npm install *)",
+      "Bash(rtk lint *)",
+      "Bash(taskkill /f /im node.exe)"
     ]
   }
 }

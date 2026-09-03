@@ -12,5 +12,14 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.userId;
     }
+
+    match /accounts/{accountId} {
+      // Cada cuenta de trading (y sus reglas) pertenece a un único usuario.
+      allow read, update, delete: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
   }
 }

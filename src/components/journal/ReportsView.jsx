@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -145,10 +145,14 @@ export default function ReportsView({ entries }) {
   const hourData = byHourOfDay(rangedEntries).filter((h) => h.count > 0);
   const contractData = byContract(rangedEntries);
   const tagStats = byTag(rangedEntries);
-  const monthData = byMonth(rangedEntries);
+    const monthData = byMonth(rangedEntries);
   const distData = pnlDistribution(rangedEntries);
   const ratingData = byRating(rangedEntries);
   const planData = byPlanFollowed(rangedEntries);
+
+  const totalPayouts = useMemo(() => {
+    return rangedEntries.reduce((sum, e) => sum + (Number(e.payout) || 0), 0);
+  }, [rangedEntries]);
 
   const hasClosedTrades = rangedEntries.some((e) => e.realPnl !== null && e.realPnl !== undefined);
 
@@ -160,10 +164,19 @@ export default function ReportsView({ entries }) {
       </div>
       <p className="helper-text">Desglose de tu rendimiento por día, hora, contrato y tags para encontrar dónde está tu ventaja.</p>
 
-      {!hasClosedTrades ? (
+            {!hasClosedTrades ? (
         <div className="history-empty">Aún no hay operaciones cerradas para analizar.</div>
       ) : (
         <>
+          <div className="ticket" style={{ marginBottom: '14px' }}>
+            <div className="body-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="lbl" style={{ fontSize: '1rem', color: '#7C8B99' }}>Total Payouts recibidos</span>
+              <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#3DD68C' }}>
+                {fmtSigned(totalPayouts)}
+              </span>
+            </div>
+          </div>
+
           <div className="ticket">
             <div className="body-inner">
               <div className="equity-header"><span className="lbl">P&amp;L mensual</span></div>

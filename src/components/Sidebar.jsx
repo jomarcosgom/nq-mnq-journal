@@ -1,5 +1,6 @@
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase.js';
+import AccountTabs from './AccountTabs.jsx';
 
 const CalcIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -40,7 +41,16 @@ const NAV_ITEMS = [
   { id: 'reports', label: 'Reportes', icon: <ReportsIcon /> }
 ];
 
-export default function Sidebar({ view, onChange, user }) {
+export default function Sidebar({
+  view,
+  onChange,
+  user,
+  accounts = [],
+  activeAccountId,
+  onSelectAccount,
+  onManageAccounts,
+  entries = []
+}) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -63,6 +73,15 @@ export default function Sidebar({ view, onChange, user }) {
           </button>
         ))}
       </nav>
+
+      <AccountTabs
+        variant="sidebar"
+        accounts={accounts}
+        activeAccountId={activeAccountId}
+        onSelect={onSelectAccount}
+        onManage={onManageAccounts}
+        entries={entries}
+      />
 
       {user && (
         <div className="sidebar-footer">

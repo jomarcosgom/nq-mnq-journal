@@ -9,11 +9,13 @@ import { showToast } from '../../utils/toast.js';
 
 const emptyFormState = () => ({
   contract: 'MNQ',
+  accountId: '',
   dateTime: nowLocalInputValue(),
   sl: 20,
   tp: 40,
   contracts: 1,
   realPnl: '',
+  payout: '',
   tags: [],
   notes: '',
   outcome: 'pending', // pending (BE) | won | lost
@@ -25,11 +27,13 @@ const emptyFormState = () => ({
 function formFromEntry(entry) {
   return {
     contract: entry.contract,
+    accountId: entry.accountId || '',
     dateTime: isoToLocalInputValue(entry.date),
     sl: entry.slPoints,
     tp: entry.tpPoints,
     contracts: entry.contracts,
     realPnl: entry.realPnl !== null && entry.realPnl !== undefined ? entry.realPnl : '',
+    payout: entry.payout !== null && entry.payout !== undefined ? entry.payout : '',
     tags: getEntryTags(entry),
     notes: entry.notes || '',
     outcome: entry.outcome || 'pending',
@@ -39,8 +43,20 @@ function formFromEntry(entry) {
   };
 }
 
-export default function JournalForm({ onSave, saving = false, editingEntry = null, onCancelEdit, allEntries = [] }) {
-  const [form, setForm] = useState(() => (editingEntry ? formFromEntry(editingEntry) : emptyFormState()));
+export default function JournalForm({
+  onSave,
+  saving = false,
+  editingEntry = null,
+  onCancelEdit,
+  allEntries = [],
+  accounts = [],
+  activeAccountId = 'all',
+  onManageAccounts
+}) {
+  const defaultAccountId = activeAccountId && activeAccountId !== 'all' ? activeAccountId : '';
+  const [form, setForm] = useState(() =>
+    (editingEntry ? formFromEntry(editingEntry) : { ...emptyFormState(), accountId: defaultAccountId })
+  );
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
   const tagSuggestions = collectAllTags(allEntries);
@@ -48,9 +64,9 @@ export default function JournalForm({ onSave, saving = false, editingEntry = nul
   // Cuando se pide editar una operación (o se cancela la edición),
   // recarga el formulario con esos datos (o lo vacía de nuevo).
   useEffect(() => {
-    setForm(editingEntry ? formFromEntry(editingEntry) : emptyFormState());
+    setForm(editingEntry ? formFromEntry(editingEntry) : { ...emptyFormState(), accountId: defaultAccountId });
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [editingEntry]);
+  }, [editingEntry, defaultAccountId]);
 
   const spec = SPECS[form.contract];
   const contractsNum = Math.max(1, parseFloat(form.contracts) || 1);
@@ -102,11 +118,13 @@ export default function JournalForm({ onSave, saving = false, editingEntry = nul
     }
 
     const realPnlNum = form.realPnl !== '' ? parseFloat(form.realPnl) : null;
+    const payoutNum = form.payout !== '' ? parseFloat(form.payout) : null;
     const rr = slPoints > 0 ? tpPoints / slPoints : null;
 
     const entry = {
       date: new Date(form.dateTime).toISOString(),
       contract: form.contract,
+      accountId: form.accountId || null,
       contracts: contractsNum,
       slPoints,
       tpPoints,
@@ -114,6 +132,7 @@ export default function JournalForm({ onSave, saving = false, editingEntry = nul
       rewardDollars,
       rr,
       realPnl: realPnlNum !== null && !isNaN(realPnlNum) ? realPnlNum : null,
+      payout: payoutNum !== null && !isNaN(payoutNum) ? payoutNum : null,
       tags: form.tags,
       notes: form.notes.trim(),
       outcome: form.outcome,
@@ -126,7 +145,7 @@ export default function JournalForm({ onSave, saving = false, editingEntry = nul
     // Solo vaciamos el formulario si el guardado fue bien; si falló,
     // dejamos los datos tal cual para que no se pierda lo escrito.
     if (ok) {
-      setForm(emptyFormState());
+      setForm({ ...emptyFormState(), accountId: form.accountId });
       setErrors({});
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -165,6 +184,27 @@ export default function JournalForm({ onSave, saving = false, editingEntry = nul
               NQ
             </button>
           </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="trade-account">Cuenta</label>
+          <select
+            id="trade-account"
+            value={form.accountId}
+            onChange={(e) => {
+              if (e.target.value === '__manage__') {
+                onManageAccounts?.();
+                return;
+              }
+              setField('accountId', e.target.value);
+            }}
+          >
+            <option value="">Sin cuenta asignada</option>
+            {accounts.map((a) => (
+              <option key={a.firestoreId} value={a.firestoreId}>{a.name}</option>
+            ))}
+            <option value="__manage__">＋ Gestionar cuentas…</option>
+          </select>
         </div>
 
         <div className="field">
@@ -249,6 +289,18 @@ export default function JournalForm({ onSave, saving = false, editingEntry = nul
             aria-invalid={!!errors.realPnl}
           />
           {errors.realPnl && <div className="field-error">{errors.realPnl}</div>}
+        </div>
+
+        <div className="field">
+          <label htmlFor="trade-payout">Payout recibido ($)</label>
+          <input
+            id="trade-payout"
+            type="number"
+            step="0.01"
+            placeholder="Ej. 500.00"
+            value={form.payout}
+            onChange={(e) => setField('payout', e.target.value)}
+          />
         </div>
 
         <div className="field">

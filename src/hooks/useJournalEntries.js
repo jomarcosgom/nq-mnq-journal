@@ -70,9 +70,12 @@ export function useJournalEntries(user) {
     await deleteDoc(doc(db, TRADES_COLLECTION, firestoreId));
   }
 
-  async function clearAll() {
+  async function clearAll(targetEntries) {
+    // Si se pasan operaciones concretas (p. ej. las de una cuenta), solo se
+    // borran esas; si no, se vacía todo el historial del usuario.
+    const toDelete = targetEntries || entries;
     const batch = writeBatch(db);
-    entries.forEach((e) => batch.delete(doc(db, TRADES_COLLECTION, e.firestoreId)));
+    toDelete.forEach((e) => batch.delete(doc(db, TRADES_COLLECTION, e.firestoreId)));
     await batch.commit();
   }
 
