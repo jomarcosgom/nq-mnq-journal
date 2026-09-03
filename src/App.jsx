@@ -1,12 +1,12 @@
-import React, { useEffect, useMemo, useState, Suspense } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase.js';
-const CalculatorView = React.lazy(() => import('./components/CalculatorView.jsx'));
+import CalculatorView from './components/CalculatorView.jsx';
 import AuthScreen from './components/AuthScreen.jsx';
 import LandingPage from './components/LandingPage.jsx';
 import Sidebar, { BottomNav } from './components/Sidebar.jsx';
-const JournalView = React.lazy(() => import('./components/journal/JournalView.jsx'));
-const ReportsView = React.lazy(() => import('./components/journal/ReportsView.jsx'));
+import JournalView from './components/journal/JournalView.jsx';
+import ReportsView from './components/journal/ReportsView.jsx';
 import ToastHost from './components/ToastHost.jsx';
 import ConfirmHost from './components/ConfirmHost.jsx';
 import AccountTabs from './components/AccountTabs.jsx';
@@ -87,27 +87,25 @@ export default function App() {
               entries={journal.entries}
             />
 
-            <Suspense fallback={<div className="loading-container"><div className="spinner"></div><p>Cargando vista...</p></div>}>
-              <div className={`view ${view === 'calc' ? 'active' : ''}`}>
-                <CalculatorView />
-              </div>
+            <div className={`view ${view === 'calc' ? 'active' : ''}`}>
+              <CalculatorView />
+            </div>
 
-              <div className={`view ${view === 'journal' ? 'active' : ''}`}>
-                <JournalView
-                  {...journal}
-                  entries={scopedEntries}
-                  accounts={accounts}
-                  activeAccount={activeAccount}
-                  activeAccountId={activeAccountId}
-                  onManageAccounts={() => setManagingAccounts(true)}
-                  onUpdateAccount={accountsApi.updateAccount}
-                />
-              </div>
+            <div className={`view ${view === 'journal' ? 'active' : ''}`}>
+              <JournalView
+                {...journal}
+                entries={scopedEntries}
+                accounts={accounts}
+                activeAccount={activeAccount}
+                activeAccountId={activeAccountId}
+                onManageAccounts={() => setManagingAccounts(true)}
+                onUpdateAccount={accountsApi.updateAccount}
+              />
+            </div>
 
-              <div className={`view ${view === 'reports' ? 'active' : ''}`}>
-                <ReportsView entries={scopedEntries} />
-              </div>
-            </Suspense>
+            <div className={`view ${view === 'reports' ? 'active' : ''}`}>
+              <ReportsView entries={scopedEntries} />
+            </div>
           </div>
         </main>
 
